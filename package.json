@@ -1,0 +1,11 @@
+{
+  "name": "novatech-microapps",
+  "private": true,
+  "description": "Monorepo de micro apps de NovaTech Consulting",
+  "scripts": {
+    "db:sync": "node scripts/db-sync.mjs",
+    "db:reset": "node scripts/db-sync.mjs && supabase db reset",
+    "db:test": "node scripts/db-sync.mjs && supabase test db"
+  },
+  "engines": { "node": ">=20" }
+}

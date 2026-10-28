@@ -1,0 +1,17 @@
+export const color = {
+  marino: '#08132B',
+  marino2: '#0F1F40',
+  turquesa: '#17D9C4',
+  turquesaOscuro: '#0E8F82',
+  fondo: '#F4F6FA',
+  texto: '#101828',
+  gris: '#667085',
+  borde: '#D0D5DD',
+  ok: '#059669',
+  okFondo: '#ECFDF5',
+  alerta: '#B45309',
+  alertaFondo: '#FFFBEB',
+  error: '#B42318',
+  errorFondo: '#FEF3F2',
+  blanco: '#FFFFFF',
+};

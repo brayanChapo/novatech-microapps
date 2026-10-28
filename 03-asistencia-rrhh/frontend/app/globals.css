@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-marino: #08132b;
+  --color-marino-2: #0f1f40;
+  --color-turquesa: #17d9c4;
+  --color-turquesa-oscuro: #0e8f82;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+body {
+  background: #f4f6fa;
+  color: #101828;
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+}

@@ -1,0 +1,41 @@
+# Configuración LOCAL del proyecto Supabase compartido de NovaTech.
+# Si tu versión del CLI se queja por claves faltantes, ejecuta `supabase init --force`
+# en una carpeta temporal y copia aquí solo las secciones de abajo.
+
+project_id = "novatech-microapps"
+
+[api]
+enabled = true
+port = 54321
+# Cada micro app usa su propio esquema; deben estar expuestos para la API.
+schemas = ["public", "graphql_public", "core", "asistencia"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
+jwt_expiry = 3600
+# Sin registro público: los usuarios los crea el backend con la API admin (service_role).
+enable_signup = false
+
+[auth.email]
+enable_signup = true          # habilita el proveedor de correo/contraseña para iniciar sesión
+enable_confirmations = false  # el admin crea la cuenta ya confirmada
