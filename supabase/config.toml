@@ -8,7 +8,7 @@ project_id = "novatech-microapps"
 enabled = true
 port = 54321
 # Cada micro app usa su propio esquema; deben estar expuestos para la API.
-schemas = ["public", "graphql_public", "core", "asistencia"]
+schemas = ["public", "graphql_public", "core", "asistencia", "agenda"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
@@ -31,7 +31,7 @@ port = 54323
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000"]
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:3001"]
 jwt_expiry = 3600
 # Sin registro público: los usuarios los crea el backend con la API admin (service_role).
 enable_signup = false
