@@ -1,12 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#16a34a',
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'Agenda de Citas · NovaTech',
   description: 'Sistema de agenda de citas con recordatorios automáticos por WhatsApp',
   manifest: '/manifest.json',
-  themeColor: '#16a34a',
-  viewport: 'width=device-width, initial-scale=1',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

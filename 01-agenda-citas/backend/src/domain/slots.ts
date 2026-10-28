@@ -6,13 +6,16 @@ export interface CitaOcupada {
   fin: Date;
 }
 
+// Peru es UTC-5 sin horario de verano. Las horas en disponibilidad están en Lima.
+const LIMA_OFFSET_H = 5;
+
 /**
  * Calcula los slots disponibles para un profesional en una fecha dada.
  * Función PURA: sin efectos secundarios, sin I/O.
  *
- * @param disponibilidad  Bloques semanales del profesional
- * @param citasExistentes Citas ya reservadas/confirmadas en esa fecha
- * @param fecha           Fecha local (hora 00:00:00 UTC del día consultado)
+ * @param disponibilidad  Bloques semanales del profesional (horas en tiempo Lima)
+ * @param citasExistentes Citas ya reservadas/confirmadas en esa fecha (timestamps UTC)
+ * @param fecha           Inicio del día UTC (p. ej. 2025-11-10T00:00:00Z)
  * @param duracionMin     Duración del servicio en minutos
  */
 export function calcularSlots(
@@ -36,12 +39,12 @@ export function calcularSlots(
     const [hIni, mIni] = bloque.hora_inicio.split(':').map(Number) as [number, number];
     const [hFin, mFin] = bloque.hora_fin.split(':').map(Number) as [number, number];
 
-    // Construir Date para el inicio y fin del bloque en la misma fecha
+    // Convertir hora Lima → UTC sumando el offset (setUTCHours maneja rollover a día siguiente)
     const inicioBloque = new Date(fecha);
-    inicioBloque.setUTCHours(hIni, mIni, 0, 0);
+    inicioBloque.setUTCHours(hIni + LIMA_OFFSET_H, mIni, 0, 0);
 
     const finBloque = new Date(fecha);
-    finBloque.setUTCHours(hFin, mFin, 0, 0);
+    finBloque.setUTCHours(hFin + LIMA_OFFSET_H, mFin, 0, 0);
 
     if (inicioBloque >= finBloque) continue;
 

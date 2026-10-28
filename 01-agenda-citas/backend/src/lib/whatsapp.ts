@@ -37,7 +37,7 @@ export async function enviarPlantilla(
     template: {
       name: plantilla,
       language: { code: 'es' },
-      components,
+      components: componentes,
     },
   };
 
