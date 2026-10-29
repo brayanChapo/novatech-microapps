@@ -1,0 +1,132 @@
+name: "01 Agenda Citas — Deploy"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "01-agenda-citas/**"
+      - "supabase/migrations/**"
+
+  # Permite disparar manualmente (rollback o redeploy forzado)
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false   # no cancelar deploys en curso
+
+jobs:
+  # ── 1. CI gate: el deploy solo corre si CI pasó ──────────────────────────────
+  ci-gate:
+    name: "Esperar CI verde"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify CI workflow passed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: '01-agenda-citas-ci.yml',
+              branch: 'main',
+              per_page: 1,
+            });
+            const latest = runs.data.workflow_runs[0];
+            if (!latest || latest.conclusion !== 'success') {
+              core.setFailed(
+                `El último run de CI no está en estado "success" (estado: ${latest?.conclusion ?? 'none'}). Corrija los errores antes de desplegar.`
+              );
+            }
+
+  # ── 2. Migración de base de datos (primero, antes de deployer el backend) ────
+  migrate-db:
+    name: "Migrate DB (supabase db push)"
+    runs-on: ubuntu-latest
+    needs: ci-gate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push migrations to production
+        run: npx supabase db push --linked
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_REF_AGENDA }}
+
+  # ── 3. Deploy del backend a Vercel ───────────────────────────────────────────
+  deploy-backend:
+    name: "Deploy Backend → Vercel"
+    runs-on: ubuntu-latest
+    needs: migrate-db
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_AGENDA_BACKEND }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 01-agenda-citas/backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 01-agenda-citas/backend
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment (production)
+        working-directory: 01-agenda-citas/backend
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build (Vercel)
+        working-directory: 01-agenda-citas/backend
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to production
+        working-directory: 01-agenda-citas/backend
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  # ── 4. Deploy del frontend a Vercel ──────────────────────────────────────────
+  deploy-frontend:
+    name: "Deploy Frontend → Vercel"
+    runs-on: ubuntu-latest
+    needs: ci-gate          # no depende de migrate-db; puede correr en paralelo con deploy-backend
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_AGENDA_FRONTEND }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 01-agenda-citas/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 01-agenda-citas/frontend
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment (production)
+        working-directory: 01-agenda-citas/frontend
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build (Vercel)
+        working-directory: 01-agenda-citas/frontend
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to production
+        working-directory: 01-agenda-citas/frontend
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

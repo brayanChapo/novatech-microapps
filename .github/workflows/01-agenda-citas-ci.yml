@@ -1,0 +1,127 @@
+name: "01 Agenda Citas — CI"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "01-agenda-citas/**"
+      - "supabase/migrations/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "01-agenda-citas/**"
+      - "supabase/migrations/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Lint + typecheck (backend y frontend en paralelo) ─────────────────────
+  lint-typecheck:
+    name: "Lint & Typecheck"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app:
+          - name: backend
+            path: 01-agenda-citas/backend
+          - name: frontend
+            path: 01-agenda-citas/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.app.path }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.app.path }}
+        run: npm ci
+
+      - name: Typecheck (${{ matrix.app.name }})
+        working-directory: ${{ matrix.app.path }}
+        run: npm run typecheck
+
+  # ── 2. Tests del backend ─────────────────────────────────────────────────────
+  test-backend:
+    name: "Test Backend (vitest)"
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    env:
+      SUPABASE_URL: http://127.0.0.1:54321
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 01-agenda-citas/backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 01-agenda-citas/backend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: 01-agenda-citas/backend
+        run: npm run test
+
+  # ── 3. Tests del frontend ────────────────────────────────────────────────────
+  test-frontend:
+    name: "Test Frontend (vitest)"
+    runs-on: ubuntu-latest
+    needs: lint-typecheck
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 01-agenda-citas/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 01-agenda-citas/frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: 01-agenda-citas/frontend
+        run: npm run test
+
+  # ── 4. Build del frontend ────────────────────────────────────────────────────
+  build-frontend:
+    name: "Build Frontend (next build)"
+    runs-on: ubuntu-latest
+    needs: test-frontend
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 01-agenda-citas/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: 01-agenda-citas/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: 01-agenda-citas/frontend
+        run: npm run build
