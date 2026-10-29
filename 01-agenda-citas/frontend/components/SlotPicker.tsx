@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui';
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4001';
 
 interface Props {
+  empresaId: string;
   profesionalId: string;
   servicioId: string;
   fecha: string;
@@ -14,17 +15,18 @@ interface Props {
   onSeleccionar: (slot: SlotDisponible) => void;
 }
 
-export function SlotPicker({ profesionalId, servicioId, fecha, seleccionado, onSeleccionar }: Props) {
+export function SlotPicker({ empresaId, profesionalId, servicioId, fecha, seleccionado, onSeleccionar }: Props) {
   const [slots, setSlots] = useState<SlotDisponible[]>([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!profesionalId || !fecha) return;
+    if (!profesionalId || !fecha || !empresaId) return;
     setCargando(true);
     setError('');
 
     const query = new URLSearchParams({
+      empresa_id: empresaId,
       profesional_id: profesionalId,
       fecha,
       ...(servicioId ? { servicio_id: servicioId } : {}),

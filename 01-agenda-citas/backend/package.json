@@ -5,8 +5,8 @@
   "type": "module",
   "description": "API de la micro app de Agenda de Citas (NovaTech)",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
+    "dev": "node --env-file=.env --import tsx/esm --watch src/server.ts",
+    "start": "node --env-file=.env --import tsx/esm src/server.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

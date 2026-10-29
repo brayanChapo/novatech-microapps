@@ -235,6 +235,7 @@ function PaginaReservaInterna() {
             {fechaSeleccionada && (
               <div className="mt-4">
                 <SlotPicker
+                  empresaId={empresaId}
                   profesionalId={profesionalId}
                   servicioId={servicioId}
                   fecha={fechaSeleccionada}
